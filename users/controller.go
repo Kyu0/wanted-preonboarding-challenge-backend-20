@@ -1,17 +1,27 @@
 package users
 
 import (
+	"market/initializers"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func List(c *gin.Context) {
+	var users []User
 
+	initializers.DB.Find(&users)
+
+	c.JSON(http.StatusOK, gin.H{
+		"users": users,
+	})
 }
 
 func Get(c *gin.Context) {
+	id := c.Param("id")
+
 	var user User
+	initializers.DB.First(&user, id)
 
 	c.JSON(http.StatusOK, gin.H{
 		"users": user,
@@ -19,13 +29,79 @@ func Get(c *gin.Context) {
 }
 
 func Create(c *gin.Context) {
+	var body struct {
+		Username string
+		Password string
+	}
+	c.Bind(&body)
 
+	user := User{Username: body.Username, Password: body.Password}
+	result := initializers.DB.Create(&user)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"result": result.Error.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"result": user,
+	})
 }
 
 func Modify(c *gin.Context) {
+	var body struct {
+		ID       uint
+		Username string
+		Password string
+	}
 
+	c.Bind(&body)
+
+	var user User
+	result := initializers.DB.First(&user, body.ID)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"result": result.Error.Error(),
+		})
+		return
+	}
+
+	result = initializers.DB.Model(&user).Updates(body)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"result": result.Error.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"result": body.ID,
+	})
 }
 
 func Delete(c *gin.Context) {
+	id := c.Param("id")
 
+	result := initializers.DB.Delete(&User{}, id)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"result": result.Error.Error(),
+		})
+		return
+	}
+
+	if result.RowsAffected < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"result": "No records have that id.",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"result": id,
+	})
 }
