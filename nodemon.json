@@ -1,0 +1,5 @@
+{
+    "watch": ["*"],
+    "ext": "go",
+    "exec": "go run main.go && lsof -n -i4TCP:8080 | xargs killall -9 && go run main.go"
+}
