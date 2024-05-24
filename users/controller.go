@@ -1,10 +1,12 @@
 package users
 
 import (
+	"log"
 	"market/initializers"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func List(c *gin.Context) {
@@ -28,6 +30,27 @@ func Get(c *gin.Context) {
 	})
 }
 
+func Login(c *gin.Context) {
+	var body struct {
+		Username string
+		Password string
+	}
+	c.Bind(&body)
+
+	var user User
+	result := initializers.DB.Where(&User{Username: body.Username}).First(&user)
+
+	if result.Error == nil && bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)) == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"result": "Done.",
+		})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"result": "Not matched.",
+		})
+	}
+}
+
 func Create(c *gin.Context) {
 	var body struct {
 		Username string
@@ -35,7 +58,14 @@ func Create(c *gin.Context) {
 	}
 	c.Bind(&body)
 
-	user := User{Username: body.Username, Password: body.Password}
+	encrypt, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+
+	if err != nil {
+		log.Fatal("Fail to encrypt password")
+		return
+	}
+
+	user := User{Username: body.Username, Password: string(encrypt[:])}
 	result := initializers.DB.Create(&user)
 
 	if result.Error != nil {

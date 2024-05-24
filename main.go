@@ -20,6 +20,7 @@ func main() {
 	r.GET("/users", users.List)
 	r.GET("/users/:id", users.Get)
 	r.POST("/users", users.Create)
+	r.POST("/login", users.Login)
 	r.PUT("/users", users.Modify)
 	r.DELETE("/users/:id", users.Delete)
 
