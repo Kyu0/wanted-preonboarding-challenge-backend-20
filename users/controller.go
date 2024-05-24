@@ -15,7 +15,7 @@ func List(c *gin.Context) {
 	initializers.DB.Find(&users)
 
 	c.JSON(http.StatusOK, gin.H{
-		"users": users,
+		"result": users,
 	})
 }
 
@@ -23,10 +23,17 @@ func Get(c *gin.Context) {
 	id := c.Param("id")
 
 	var user User
-	initializers.DB.First(&user, id)
+	result := initializers.DB.First(&user, id)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"result": "",
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"users": user,
+		"result": user,
 	})
 }
 
@@ -86,7 +93,6 @@ func Modify(c *gin.Context) {
 		Username string
 		Password string
 	}
-
 	c.Bind(&body)
 
 	var user User
