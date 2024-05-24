@@ -14,7 +14,7 @@ func init() {
 	initializers.DB.AutoMigrate(&users.User{}, &products.Product{})
 }
 
-func main() {
+func setUpRouter() *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/users", users.List)
@@ -24,5 +24,10 @@ func main() {
 	r.PUT("/users", users.Modify)
 	r.DELETE("/users/:id", users.Delete)
 
+	return r
+}
+
+func main() {
+	r := setUpRouter()
 	r.Run()
 }
